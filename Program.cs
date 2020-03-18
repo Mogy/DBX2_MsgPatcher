@@ -10,23 +10,35 @@ namespace DBX2_MsgPatcher
     {
         const string DIR_EN_MSG = "PcEnMsg";
         const string DIR_OUTPUT = "output\\data\\msg";
-        const string DIR_TEMP = "output\\tmp";
+        const string DIR_TEMP = "tmp";
         const string MSG_TOOL = "Dragon_Ball_Xenoverse_2_MSG_Tool.exe";
         const string JA_MSG = "jaMsg.txt";
         const string ERROR = "error.log";
         static void Main(string[] args)
         {
+            var fromProcess = args.Length > 0;
+            var dirEnMsg = DIR_EN_MSG;
+            var dirOutput = DIR_OUTPUT;
+
+            if (args.Length == 2) {
+                dirEnMsg = args[0];
+                dirOutput = args[1];
+            }
+
             // フォルダ生成
-            Directory.CreateDirectory(DIR_EN_MSG);
-            Directory.CreateDirectory(DIR_OUTPUT);
+            Directory.CreateDirectory(dirEnMsg);
+            Directory.CreateDirectory(dirOutput);
 
             // msgTool存在チェック
             if (!File.Exists(MSG_TOOL))
             {
                 Console.WriteLine($"{MSG_TOOL} is not found.");
-                Console.WriteLine();
-                Console.WriteLine("-- please push any key --");
-                Console.ReadKey();
+                if(!fromProcess)
+                {
+                    Console.WriteLine();
+                    Console.WriteLine("-- please push any key --");
+                    Console.ReadKey();
+                }
                 Environment.Exit(1);
             }
 
@@ -34,9 +46,12 @@ namespace DBX2_MsgPatcher
             if (!File.Exists(JA_MSG))
             {
                 Console.WriteLine($"{JA_MSG} is not found.");
-                Console.WriteLine();
-                Console.WriteLine("-- please push any key --");
-                Console.ReadKey();
+                if (!fromProcess)
+                {
+                    Console.WriteLine();
+                    Console.WriteLine("-- please push any key --");
+                    Console.ReadKey();
+                }
                 Environment.Exit(1);
             }
 
@@ -81,7 +96,7 @@ namespace DBX2_MsgPatcher
                 // 英語メッセージ存在チェック
                 var jaMsg = Path.GetFileName(Path.ChangeExtension(txtPath, "msg"));
                 var enMsg = jaMsg.Replace("_ja", "_en");
-                var enPath = Path.Join(DIR_EN_MSG, enMsg);
+                var enPath = Path.Join(dirEnMsg, enMsg);
                 if (!File.Exists(enPath))
                 {
                     continue;
@@ -93,7 +108,7 @@ namespace DBX2_MsgPatcher
 
                 // 出力ファイルを移動
                 var newPath = enPath + ".NEW";
-                var resultPath = Path.Join(DIR_OUTPUT, enMsg);
+                var resultPath = Path.Join(dirOutput, enMsg);
                 if (File.Exists(newPath))
                 {
                     File.Move(newPath, resultPath, true);
@@ -118,9 +133,12 @@ namespace DBX2_MsgPatcher
             {
                 Console.WriteLine($"{errors} files failed to create.");
             }
-            Console.WriteLine();
-            Console.WriteLine("-- please push any key --");
-            Console.ReadKey();
+            if (!fromProcess)
+            {
+                Console.WriteLine();
+                Console.WriteLine("-- please push any key --");
+                Console.ReadKey();
+            }
         }
 
         static void createImportFiles() {
@@ -146,6 +164,11 @@ namespace DBX2_MsgPatcher
                     if (sw == null) continue;
 
                     sw.WriteLine(line);
+                }
+                if (sw != null)
+                {
+                    sw.Close();
+                    sw = null;
                 }
             }
             Console.Clear();
