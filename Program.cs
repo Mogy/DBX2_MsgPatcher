@@ -20,7 +20,8 @@ namespace DBX2_MsgPatcher
             var dirEnMsg = DIR_EN_MSG;
             var dirOutput = DIR_OUTPUT;
 
-            if (args.Length == 2) {
+            if (args.Length == 2)
+            {
                 dirEnMsg = args[0];
                 dirOutput = args[1];
             }
@@ -33,7 +34,7 @@ namespace DBX2_MsgPatcher
             if (!File.Exists(MSG_TOOL))
             {
                 Console.WriteLine($"{MSG_TOOL} is not found.");
-                if(!fromProcess)
+                if (!fromProcess)
                 {
                     Console.WriteLine();
                     Console.WriteLine("-- please push any key --");
@@ -96,7 +97,7 @@ namespace DBX2_MsgPatcher
                 // 英語メッセージ存在チェック
                 var jaMsg = Path.GetFileName(Path.ChangeExtension(txtPath, "msg"));
                 var enMsg = jaMsg.Replace("_ja", "_en");
-                var enPath = Path.Join(dirEnMsg, enMsg);
+                var enPath = Path.Combine(dirEnMsg, enMsg);
                 if (!File.Exists(enPath))
                 {
                     continue;
@@ -108,10 +109,11 @@ namespace DBX2_MsgPatcher
 
                 // 出力ファイルを移動
                 var newPath = enPath + ".NEW";
-                var resultPath = Path.Join(dirOutput, enMsg);
+                var resultPath = Path.Combine(dirOutput, enMsg);
                 if (File.Exists(newPath))
                 {
-                    File.Move(newPath, resultPath, true);
+                    File.Copy(newPath, resultPath, true);
+                    File.Delete(newPath);
                 }
                 else
                 {
@@ -141,7 +143,8 @@ namespace DBX2_MsgPatcher
             }
         }
 
-        static void createImportFiles() {
+        static void createImportFiles()
+        {
             Console.WriteLine("create import files...");
             StreamWriter sw = null;
             using (var sr = new StreamReader(JA_MSG))
@@ -151,16 +154,17 @@ namespace DBX2_MsgPatcher
                     var line = sr.ReadLine();
                     if (line.StartsWith("■■■"))
                     {
-                        if (sw != null) {
+                        if (sw != null)
+                        {
                             sw.Close();
                             sw = null;
                         }
                         var jaMsg = Path.GetFileName(line.Replace("■■■", ""));
-                        var txtPath = Path.Join(DIR_TEMP, Path.ChangeExtension(jaMsg, "txt"));
+                        var txtPath = Path.Combine(DIR_TEMP, Path.ChangeExtension(jaMsg, "txt"));
                         sw = new StreamWriter(txtPath, true, Encoding.UTF8);
                         continue;
                     }
-                    
+
                     if (sw == null) continue;
 
                     sw.WriteLine(line);
