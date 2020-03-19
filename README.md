@@ -2,7 +2,7 @@
 
 Dragon Ball Xenoverse 2 MSG Tool By Delutto を使ってメッセージデータを作成するための補助ツール
 
-実行には[.Net Core Runtime 3.1](https://www.ipentec.com/document/windows-install-dotnet-core-31-runtime)が必要
+実行には[.Net Framework](https://dotnet.microsoft.com/download/dotnet-framework/thank-you/net48-web-installer)が必要
 
 変換元のメッセージデータは各自で吸い出して用意する
 
