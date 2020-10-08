@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading;
 
@@ -104,11 +105,11 @@ namespace DBX2_MsgPatcher
                 }
 
                 // msgTool実行(Import)
-                msgTool.Arguments = String.Join(" ", "-i", enPath, txtPath);
+                msgTool.Arguments = createArguments("-i", enPath, txtPath);
                 Process.Start(msgTool).WaitForExit();
 
                 // 出力ファイルを移動
-                var newPath = enPath + ".NEW";
+                var newPath = Path.Combine(dirEnMsg, enMsg + ".NEW");
                 var resultPath = Path.Combine(dirOutput, enMsg);
                 if (File.Exists(newPath))
                 {
@@ -176,6 +177,11 @@ namespace DBX2_MsgPatcher
                 }
             }
             Console.Clear();
+        }
+
+        private static string createArguments(params string[] args)
+        {
+            return string.Join(" ", args.Select(x => '"' + x + '"'));
         }
     }
 }
