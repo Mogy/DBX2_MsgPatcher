@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -13,6 +14,7 @@ namespace DBX2_MsgPatcher
         const string DIR_OUTPUT = "output\\data\\msg";
         const string DIR_TEMP = "tmp";
         const string MSG_TOOL = "Dragon_Ball_Xenoverse_2_MSG_Tool.exe";
+        const string EN_MSG = "enMsg.txt";
         const string JA_MSG = "jaMsg.txt";
         const string ERROR = "error.log";
         static void Main(string[] args)
@@ -81,11 +83,13 @@ namespace DBX2_MsgPatcher
             msgTool.CreateNoWindow = true;
             msgTool.UseShellExecute = false;
 
-            createImportFiles();
+            createImportFiles(EN_MSG);
+            createImportFiles(JA_MSG);
 
             var txtFiles = Directory.GetFiles(DIR_TEMP, "*_ja.txt");
             var currents = 1;
             var errors = 0;
+            var hasEnMsg = File.Exists(EN_MSG);
 
             foreach (string txtPath in txtFiles)
             {
@@ -102,6 +106,16 @@ namespace DBX2_MsgPatcher
                 if (!File.Exists(enPath))
                 {
                     continue;
+                }
+
+                // メッセージ更新(旧Ver対応)
+                if (hasEnMsg) {
+                    var path = Path.ChangeExtension(enPath, "txt");
+                    // msgTool実行(Export)
+                    msgTool.Arguments = createArguments("-e", enPath, path);
+                    Process.Start(msgTool).WaitForExit();
+
+                    updateMessage(path, txtPath);
                 }
 
                 // msgTool実行(Import)
@@ -144,11 +158,60 @@ namespace DBX2_MsgPatcher
             }
         }
 
-        static void createImportFiles()
+        static void updateMessage(string path, string jaPath)
         {
+            var enPath = jaPath.Replace("_ja", "_en");
+            var dic = new List<(string en, string ja)>();
+
+            // 辞書データを作成
+            using (var enSr = new StreamReader(enPath))
+            using (var jaSr = new StreamReader(jaPath))
+            {
+                while (enSr.Peek() > -1 || jaSr.Peek() > -1)
+                {
+                    var en = enSr.ReadLine();
+                    var ja = jaSr.ReadLine();
+                    dic.Add((en, ja));
+                }
+            }
+
+            // 日本語訳を更新
+            using (var sr = new StreamReader(path))
+            using (var sw = new StreamWriter(jaPath, false, Encoding.UTF8))
+            {
+                while (sr.Peek() > -1)
+                {
+                    var line = sr.ReadLine();
+                    var result = "";
+
+                    if (!string.IsNullOrWhiteSpace(line))
+                    {
+                        var trans = dic.Find(d => d.en.Contains(line));
+
+                        if (trans.ja == null)
+                        {
+                            // 辞書に無い時は英訳を使う
+                            result = "▲" + line;
+                        }
+                        else
+                        {
+                            result = trans.ja;
+                            dic.Remove(trans);
+                        }
+                    }
+
+                    sw.WriteLine(result);
+                }
+            }
+        }
+
+        static void createImportFiles(string fileName)
+        {
+            if (!File.Exists(fileName)) return;
+
             Console.WriteLine("create import files...");
             StreamWriter sw = null;
-            using (var sr = new StreamReader(JA_MSG))
+            using (var sr = new StreamReader(fileName))
             {
                 while (sr.Peek() > -1)
                 {
@@ -160,8 +223,8 @@ namespace DBX2_MsgPatcher
                             sw.Close();
                             sw = null;
                         }
-                        var jaMsg = Path.GetFileName(line.Replace("■■■", ""));
-                        var txtPath = Path.Combine(DIR_TEMP, Path.ChangeExtension(jaMsg, "txt"));
+                        var msg = Path.GetFileName(line.Replace("■■■", ""));
+                        var txtPath = Path.Combine(DIR_TEMP, Path.ChangeExtension(msg, "txt"));
                         sw = new StreamWriter(txtPath, true, Encoding.UTF8);
                         continue;
                     }
